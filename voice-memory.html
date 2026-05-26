@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Память вещей</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;600;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --border: #252535;
+    --accent: #00d4aa;
+    --accent2: #0099ff;
+    --text: #e0e8f0;
+    --muted: #6080a0;
+    --success: #00d4aa;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    right: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(0,212,170,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%;
+    left: -10%;
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(circle, rgba(0,153,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {}
+  .header-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .gemini-badge {
+    background: linear-gradient(135deg, rgba(0,212,170,0.15), rgba(0,153,255,0.15));
+    border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  /* Setup */
+  #setup-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 24px;
+    gap: 18px;
+  }
+
+  .setup-icon {
+    font-size: 56px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .setup-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .setup-desc {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.65;
+    max-width: 320px;
+  }
+
+  .setup-desc a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  .setup-steps {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .setup-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .input-group {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    max-width: 340px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+  /* App */
+  #app {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .tab {
+    padding: 13px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+    user-select: none;
+  }
+
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  .panel { display: none; flex: 1; flex-direction: column; padding: 18px; gap: 14px; overflow-y: auto; }
+  .panel.active { display: flex; }
+
+  /* Record */
+  .record-area {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .record-hint {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .mic-btn {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    box-shadow: 0 0 30px rgba(0,212,170,0.25);
+  }
+
+  .mic-btn.recording {
+    animation: mic-pulse 1.2s ease-in-out infinite;
+    background: linear-gradient(135deg, #ff6b6b, #ff4444);
+    box-shadow: 0 0 30px rgba(255,100,100,0.4);
+  }
+
+  @keyframes mic-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,100,100,0.5); }
+    70% { box-shadow: 0 0 0 22px rgba(255,100,100,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,100,100,0); }
+  }
+
+  .mic-btn:active { transform: scale(0.93); }
+
+  .status-msg {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    min-height: 16px;
+  }
+
+  .transcript-box {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    color: var(--text);
+    min-height: 60px;
+    line-height: 1.5;
+  }
+
+  .transcript-placeholder { color: var(--muted); font-style: italic; font-size: 13px; }
+
+  .save-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #00b894);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s;
+    display: none;
+  }
+
+  .save-btn.visible { display: block; }
+  .save-btn:active { transform: scale(0.97); }
+
+  /* Search */
+  .search-box {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-input-row input {
+    flex: 1;
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
+  .search-mic-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .search-mic-btn.recording {
+    background: rgba(255,100,100,0.2);
+    border-color: #ff6b6b;
+  }
+
+  .ask-btn {
+    background: linear-gradient(135deg, var(--accent2), #0066cc);
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .ask-btn:active { transform: scale(0.97); }
+
+  .answer-box {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    display: none;
+  }
+
+  .answer-box.visible { display: block; }
+
+  .answer-label {
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .dots span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: dot-bounce 1.2s ease-in-out infinite;
+    margin-right: 3px;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dot-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Records */
+  .records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .records-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .clear-btn {
+    font-size: 11px;
+    color: #ff6b6b;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+  }
+
+  .record-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: slide-in 0.25s ease;
+    position: relative;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .record-text { font-size: 14px; line-height: 1.5; color: var(--text); padding-right: 24px; }
+  .record-meta { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  .delete-record {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  .settings-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .settings-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .stats-row { display: flex; gap: 10px; }
+
+  .stat-chip {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 10px 14px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .api-key-display {
+    font-size: 12px;
+    color: var(--success);
+    font-family: monospace;
+    background: var(--surface);
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+
+  .reset-btn {
+    background: none;
+    border: 1.5px solid #ff6b6b;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ff6b6b;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Setup -->
+<div id="setup-screen">
+  <div class="setup-icon">🧠</div>
+  <div class="setup-title">Память вещей</div>
+  <div class="setup-desc">
+    Бесплатно на Google Gemini.<br>1500 запросов в день — карта не нужна!
+  </div>
+
+  <div class="setup-steps">
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div>Зайди на <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div>Нажми «Create API key» — войди через Google аккаунт</div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div>Скопируй ключ и вставь сюда</div>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <div class="input-label">Gemini API Ключ</div>
+    <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" spellcheck="false">
+  </div>
+  <button class="btn-primary" onclick="saveApiKey()">Начать бесплатно →</button>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="header-title">🧠 Память вещей</div>
+      <div class="header-sub">голосовой трекер предметов</div>
+    </div>
+    <div class="gemini-badge">Gemini ✦</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('record')">
+      <span class="tab-icon">🎙️</span>Запись
+    </div>
+    <div class="tab" onclick="switchTab('search')">
+      <span class="tab-icon">🔍</span>Поиск
+    </div>
+    <div class="tab" onclick="switchTab('records')">
+      <span class="tab-icon">📋</span>Список
+    </div>
+  </div>
+
+  <!-- Record -->
+  <div class="panel active" id="panel-record">
+    <div class="record-area">
+      <div class="record-hint">Нажми и скажи где лежит вещь.<br><em>«Ключи на полке в прихожей»</em></div>
+      <button class="mic-btn" id="mic-btn" onclick="toggleRecording('record')">🎙️</button>
+      <div class="status-msg" id="record-status">Нажми чтобы говорить</div>
+      <div class="transcript-box" id="transcript">
+        <span class="transcript-placeholder">Текст появится здесь...</span>
+      </div>
+      <button class="save-btn" id="save-btn" onclick="saveRecord()">✅ Сохранить запись</button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="panel" id="panel-search">
+    <div class="search-box">
+      <div class="record-hint">Спроси голосом или текстом где находится вещь</div>
+      <div class="search-input-row">
+        <input type="text" id="search-input" placeholder="Где мои ключи?" onkeydown="if(event.key==='Enter') askAI()">
+        <button class="search-mic-btn" id="search-mic-btn" onclick="toggleRecording('search')">🎙️</button>
+      </div>
+      <button class="ask-btn" onclick="askAI()">🔍 Найти</button>
+    </div>
+    <div class="answer-box" id="answer-box">
+      <div class="answer-label">✨ Ответ</div>
+      <div id="answer-text"></div>
+    </div>
+  </div>
+
+  <!-- Records -->
+  <div class="panel" id="panel-records">
+    <div class="records-header">
+      <div class="records-title" id="records-count">Записи</div>
+      <button class="clear-btn" onclick="clearAll()">Очистить всё</button>
+    </div>
+    <div id="records-list"></div>
+    <div class="settings-section">
+      <div class="settings-label">Статистика и настройки</div>
+      <div class="stats-row">
+        <div class="stat-chip">
+          <div class="stat-num" id="stat-count">0</div>
+          <div class="stat-label">Записей</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-num" id="stat-days">0</div>
+          <div class="stat-label">Дней</div>
+        </div>
+      </div>
+      <div class="api-key-display" id="api-key-display">Ключ: не задан</div>
+      <button class="reset-btn" onclick="resetApiKey()">🔑 Сменить API ключ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let apiKey = '';
+  let records = [];
+  let recognition = null;
+  let isRecording = false;
+  let currentTranscript = '';
+
+  function init() {
+    apiKey = localStorage.getItem('gmemory_api_key') || '';
+    records = JSON.parse(localStorage.getItem('gmemory_records') || '[]');
+    if (apiKey) showApp();
+  }
+
+  function saveApiKey() {
+    const val = document.getElementById('api-key-input').value.trim();
+    if (!val.startsWith('AIza')) {
+      showToast('❌ Ключ должен начинаться с AIza');
+      return;
+    }
+    apiKey = val;
+    localStorage.setItem('gmemory_api_key', apiKey);
+    showApp();
+  }
+
+  function resetApiKey() {
+    localStorage.removeItem('gmemory_api_key');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'flex';
+    document.getElementById('api-key-input').value = '';
+  }
+
+  function showApp() {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    renderRecords();
+    updateStats();
+    const masked = apiKey.substring(0, 8) + '...' + apiKey.slice(-4);
+    document.getElementById('api-key-display').textContent = 'Ключ: ' + masked;
+  }
+
+  function toggleRecording(target) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      showToast('⚠️ Используй Chrome для голоса');
+      return;
+    }
+
+    if (isRecording) { recognition.stop(); return; }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'ru-RU';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      if (target === 'record') {
+        document.getElementById('mic-btn').classList.add('recording');
+        document.getElementById('mic-btn').textContent = '⏹️';
+        document.getElementById('record-status').textContent = '🔴 Говорите...';
+        document.getElementById('record-status').style.color = '#ff6b6b';
+      } else {
+        document.getElementById('search-mic-btn').classList.add('recording');
+        document.getElementById('search-mic-btn').textContent = '⏹️';
+      }
+    };
+
+    recognition.onresult = (e) => {
+      const t = Array.from(e.results).map(r => r[0].transcript).join('');
+      if (target === 'record') {
+        document.getElementById('transcript').textContent = t;
+        currentTranscript = t;
+        if (e.results[0].isFinal) document.getElementById('save-btn').classList.add('visible');
+      } else {
+        document.getElementById('search-input').value = t;
+      }
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      if (target === 'record') {
+        document.getElementById('mic-btn').classList.remove('recording');
+        document.getElementById('mic-btn').textContent = '🎙️';
+        document.getElementById('record-status').textContent = 'Нажми чтобы говорить';
+        document.getElementById('record-status').style.color = '';
+        if (currentTranscript) document.getElementById('save-btn').classList.add('visible');
+      } else {
+        document.getElementById('search-mic-btn').classList.remove('recording');
+        document.getElementById('search-mic-btn').textContent = '🎙️';
+        if (document.getElementById('search-input').value) askAI();
+      }
+    };
+
+    recognition.onerror = () => showToast('Ошибка микрофона');
+    recognition.start();
+  }
+
+  function saveRecord() {
+    const text = currentTranscript || document.getElementById('transcript').textContent;
+    if (!text || text.includes('Текст появится')) return;
+
+    records.unshift({ id: Date.now(), text, date: new Date().toISOString() });
+    localStorage.setItem('gmemory_records', JSON.stringify(records));
+
+    currentTranscript = '';
+    document.getElementById('transcript').innerHTML = '<span class="transcript-placeholder">Текст появится здесь...</span>';
+    document.getElementById('save-btn').classList.remove('visible');
+
+    renderRecords();
+    updateStats();
+    showToast('✅ Сохранено!');
+  }
+
+  async function askAI() {
+    const question = document.getElementById('search-input').value.trim();
+    if (!question) return;
+
+    if (records.length === 0) {
+      showAnswer('Записей пока нет. Сначала запиши где лежат вещи на вкладке 🎙️');
+      return;
+    }
+
+    const answerBox = document.getElementById('answer-box');
+    const answerText = document.getElementById('answer-text');
+    answerBox.classList.add('visible');
+    answerText.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px"><div class="dots"><span></span><span></span><span></span></div> Ищу...</div>';
+
+    const recordsText = records.map(r => {
+      const d = new Date(r.date);
+      const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+      const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      return `[${dateStr} в ${timeStr}]: ${r.text}`;
+    }).join('\n');
+
+    const prompt = `Ты помощник по поиску вещей. Отвечай кратко на русском языке.
+Записи хозяина (от новых к старым):
+${recordsText}
+
+Вопрос: ${question}
+
+Если нашёл — скажи где вещь и когда была запись. Если не нашёл — честно скажи.`;
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 300, temperature: 0.3 }
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.error) {
+        showAnswer('❌ Ошибка: ' + data.error.message);
+        return;
+      }
+
+      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Не удалось получить ответ';
+      showAnswer(answer);
+    } catch (err) {
+      showAnswer('❌ Ошибка соединения. Проверь интернет и API ключ.');
+    }
+  }
+
+  function showAnswer(text) {
+    document.getElementById('answer-box').classList.add('visible');
+    document.getElementById('answer-text').textContent = text;
+  }
+
+  function renderRecords() {
+    const list = document.getElementById('records-list');
+    if (records.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">Записей пока нет.<br>Перейди на вкладку 🎙️ и скажи куда положил вещь.</div></div>`;
+      return;
+    }
+    list.innerHTML = records.map(r => {
+      const d = new Date(r.date);
+      const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+      const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      return `<div class="record-item" id="rec-${r.id}">
+        <button class="delete-record" onclick="deleteRecord(${r.id})">✕</button>
+        <div class="record-text">${r.text}</div>
+        <div class="record-meta">📅 ${dateStr} · ${timeStr}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function deleteRecord(id) {
+    records = records.filter(r => r.id !== id);
+    localStorage.setItem('gmemory_records', JSON.stringify(records));
+    renderRecords();
+    updateStats();
+    showToast('🗑️ Удалено');
+  }
+
+  function clearAll() {
+    if (!confirm('Удалить все записи?')) return;
+    records = [];
+    localStorage.setItem('gmemory_records', JSON.stringify(records));
+    renderRecords();
+    updateStats();
+    showToast('🗑️ Очищено');
+  }
+
+  function updateStats() {
+    document.getElementById('stat-count').textContent = records.length;
+    const days = new Set(records.map(r => new Date(r.date).toDateString())).size;
+    document.getElementById('stat-days').textContent = days;
+    document.getElementById('records-count').textContent = `Записи (${records.length})`;
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', ['record','search','records'][i] === tab);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  init();
+</script>
+</body>
+</html>
